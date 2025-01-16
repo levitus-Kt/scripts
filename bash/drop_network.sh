@@ -8,7 +8,7 @@ cd $SCRIPT_PATH
 
 # Vars
 # ---------------------------------------------------\
-ME=`basename "$0"`
+ME=`whoami`
 BACKUPS=$SCRIPT_PATH/backups
 SERVER_NAME=`hostname`
 SERVER_IP=`hostname -I | cut -d' ' -f1`
@@ -59,18 +59,12 @@ space() {
 
 # Start
 # ---------------------------------------------------\
-if [ "$USER" != "root" ]; then
-    echo "${CYAN}${BOLD}Для выполнения скрипта нужны права sudo, запустите скрипт с правами суперпользователя${NC}"
-    exit
-fi
-
-
 echo "${YELLOW}Вас приветствует программа по сохранению видеозаписей на резервный диск v3.2.1${NC}"
 a=0
 b=0
 n=0
-s=$(cat /home/ctc/count.txt)
-echo "$((s+1))" | cat > /home/ctc/count.txt
+s=$(cat /home/"$ME"/count.txt)
+echo "$((s+1))" | cat > /home/"$ME"/count.txt
 
 read -p "mat2, pv установлены у этого пользователя? Если не знаете, ответьте no\n\нет: " req 
 
@@ -83,6 +77,13 @@ esac
 
 # Input values
 # ---------------------------------------------------\
+if [ ! -d /home/"$ME"/SG-1212-2/Видеонаблюдение ]
+then
+	echo ""
+	Error
+	echo "${CYAN}${BOLD}Вы забыли смонтировать диск для резервных копий${NC}"
+	exit
+fi
 
 echo ""
 echo "Коды мероприятий: "
@@ -99,31 +100,31 @@ case "$dir" in
     	echo ""
         echo "Выбрано: Диагностики"
         dir="Диагностики"
-        diag='/media/ctc/CAM_SD/PRIVATE/AVCHD/BDMV/STREAM'
+        diag='/media/"$ME"/CAM_SD/PRIVATE/AVCHD/BDMV/STREAM'
     ;;
     2)
         echo ""
         echo "Выбрано: Итоговое собеседование"
         dir="Итоговое собеседование"
-        isob='/media/ctc/CAM_SD/DCIM'
+        isob='/media/"$ME"/CAM_SD/DCIM'
     ;;
     3)
         echo ""
         echo "Выбрано: Олимпиады"
         dir="Олимпиады"
-        olim='/media/ctc/CAM_SD/PRIVATE/AVCHD/BDMV/STREAM'
+        olim='/media/"$ME"/CAM_SD/PRIVATE/AVCHD/BDMV/STREAM'
     ;;
     4)
 		echo ""
 		echo "Выбрано: Сочинение"
 		dir="Сочинение"
-		soch='/media/ctc/CAM_SD/PRIVATE/AVCHD/BDMV/STREAM'
+		soch='/media/"$ME"/CAM_SD/PRIVATE/AVCHD/BDMV/STREAM'
 	;;
 	5)
 		echo ""
 		echo "Выбрано: ЕГКР"
 		dir="ЕГКР"
-		egkr='/media/ctc/CAM_SD/DCIM'
+		egkr='/media/"$ME"/CAM_SD/DCIM'
 	;;
     *)
         echo "Нет такого формата!"
@@ -182,13 +183,12 @@ proc=$n
 
 for FILE in *;
 do
-	exiftool $FILE | grep Modification | sed 's/:/./g' | cat > /home/ctc/set.txt
-	v=$(cat /home/ctc/set.txt | cut -c35-44)
-	Knowler
+	exiftool $FILE | grep Modification | sed 's/:/./g' | cat > /home/"$ME"/set.txt
+	v=$(cat /home/"$ME"/set.txt | cut -c35-44)
 
 	# Eliminating the human factor on an existing folder
 	# ---------------------------------------------------\
-	if [ -d  /home/ctc/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build-$cab-cam$cam" ]
+	if [ -d  /home/"$ME"/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build-$cab-cam$cam" ]
 	then
 		echo ""
 		Error
@@ -198,7 +198,7 @@ do
 			no|n|нет|Нет|не|Не|н|Н|No|N)
 				cam=$((cam+1))
 				 	while [ True ]; do
-						if [ -f  /home/ctc/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build-$cab-cam$cam"/"S1212-$dir-$v-$build-$cab-cam$cam-00$a$b$c.MTS" ]
+						if [ -f  /home/"$ME"/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build-$cab-cam$cam"/"S1212-$dir-$v-$build-$cab-cam$cam-00$a$b$c.MTS" ]
 						then
 							c=$((c+1))
 						else
@@ -216,7 +216,6 @@ do
 	fi
 done
 
-
 echo ""
 echo -n "${BLUE}Подаю напряжение на первичную обмотку${NC}  "
 sleep 2
@@ -226,24 +225,23 @@ sleep 3
 echo "$ON_CHECK"
 echo "${BLUE}Обесточиваю город...${NC}"
 
-
 for FILE in *;
 do
 
 	# Extracting metadata from a file
 	# ---------------------------------------------------\
-	exiftool $FILE | grep Modification | sed 's/:/./g' | cat > /home/ctc/set.txt
-	v=$(cat /home/ctc/set.txt | cut -c35-44)
+	exiftool $FILE | grep Modification | sed 's/:/./g' | cat > /home/"$ME"/set.txt
+	v=$(cat /home/"$ME"/set.txt | cut -c35-44)
 
 	c=$((c+1))
 
-	mkdir -p /home/ctc/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build"-"$cab"-cam"$cam"
+	mkdir -p /home/"$ME"/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build"-"$cab"-cam"$cam"
 	
 	echo ""
 	echo "Копирование файла $c/$count  "
 
 	#Without progress bar: #cp $FILE /media/ctc/Seagate\ Backup\ Plus\ Drive/Видеонаблюдение/"$dir"/"$v"/"$build"-"$cab"-cam"$cam"/"S1212-$dir-$v-$build-$cab-cam$cam-00$a$b$c.MTS"
-	echo "Прогресс файла:"; pv -ptrW $FILE >  /home/ctc/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build"-"$cab"-cam"$cam"/"S1212-$dir-$v-$build-$cab-cam$cam-00$a$b$c.MTS"
+	echo "Прогресс файла:"; pv -ptrW $FILE >  /home/"$ME"/SG-1212-2/Видеонаблюдение/"$dir"/"$v"/"$build"-"$cab"-cam"$cam"/"S1212-$dir-$v-$build-$cab-cam$cam-00$a$b$c.MTS"
 	
 	echo -n "Общий прогресс: "
 	if [ $n -le 20 ];	then
